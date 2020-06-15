@@ -1,2 +1,0 @@
-# Homochirality-project
-Homochirality project
