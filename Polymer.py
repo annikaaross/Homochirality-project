@@ -10,7 +10,8 @@ import globalvariables
 import random
 import numpy as np
 import copy
-from google.colab import widgets
+
+#from google.colab import widgets
 import matplotlib.pyplot as plt
 import jdc
 import more_itertools

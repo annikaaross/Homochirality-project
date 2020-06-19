@@ -5,14 +5,17 @@ Created on Tue Jun 16 11:53:02 2020
 
 @author: anni
 """
-import Reactable
+#import sys 
+#sys.path.append("/Users/anni/Documents/Code/homochirality/Homochirality-project")
+#from homochirality import *
+import Reactables
 import Polymer
 import Monomer
 import globalvariables
 import random
 import numpy as np
 import copy
-from google.colab import widgets
+#from google.colab import widgets
 import matplotlib.pyplot as plt
 import jdc
 import more_itertools
@@ -21,11 +24,13 @@ POOL_SIZE = 100
 ITERATIONS = 100
 
 
-a = Reactables(make_pool(POOL_SIZE))
+a = Reactables()
 
 print("Running.............|\n", end="")
 
 monomercounts = []
+
+a.refill(POOL_SIZE)
 
 for n in range(ITERATIONS):
     a.iterate(POOL_SIZE)
@@ -37,22 +42,22 @@ print("\nDone.")
 
 plots = ["parameters","polymer ee spread","ee heatmap","leftright chirality",
          "homochiral chain lengths", "homochirality vs length"]
-tb = widgets.TabBar(plots)
+#tb = widgets.TabBar(plots)
 
-with tb.output_to("parameters"):
-    a.visualize_parameters()
+#with tb.output_to("parameters"):
+a.visualize_parameters()
 
-with tb.output_to("polymer ee spread"):
-    a.plot_signed_ee_spread()
+#with tb.output_to("polymer ee spread"):
+a.plot_signed_ee_spread()
 
-with tb.output_to("ee heatmap"):
-    a.plot_ee_heatmap()
+#with tb.output_to("ee heatmap"):
+a.plot_ee_heatmap()
 
-with tb.output_to("leftright chirality"):
-    a.plot_leftrighthomochirality()
+#with tb.output_to("leftright chirality"):
+a.plot_leftrighthomochirality()
 
-with tb.output_to("homochiral chain lengths"):
-    a.plot_homochiral_chain_lengths()
+#tb.output_to("homochiral chain lengths"):
+a.plot_homochiral_chain_lengths()
 
-with tb.output_to("homochirality vs length"):
-    a.plot_homochirality_vs_length()
+#with tb.output_to("homochirality vs length"):
+a.plot_homochirality_vs_length()

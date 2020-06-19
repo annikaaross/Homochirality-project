@@ -11,7 +11,7 @@ import globalvariables
 import random
 import numpy as np
 import copy
-from google.colab import widgets
+#from google.colab import widgets
 import matplotlib.pyplot as plt
 import jdc
 import more_itertools
@@ -152,8 +152,8 @@ class Reactables:
             #If our reactable is a monomer...
             if isinstance(item, Monomer):
             #We get our breaking and bonding chances (parameters now, may become functions later?)
-                brk = POOF_CHANCE
-                bond = BOND_PROB
+                brk = globalvariables.POOF_CHANCE
+                bond = globalvariables.BOND_PROB
                 #If we roll to break the monomer
                 if 0 < roll <= brk:
                     #Just delete it
@@ -252,7 +252,7 @@ class Reactables:
         #breaks polymer at given location and creates a new polymer of the 
         #monomers removed
         #when polymer is made-breakprobabilities are calculated
-        newPolymer = Polymer(polymer.removeright(n))
+        newPolymer = Polymer(polymer.removeright(brk_location))
         polys = [newPolymer, polymer]
         #resets break probabilities in polymer
         polymer.reset_break_probability()
@@ -266,7 +266,7 @@ class Reactables:
                 self.subtract([poly])
                 del poly
              #checks if the polymer is not in the reactables list
-             elif (poly not in self.get_reactables()):
+            elif (poly not in self.get_reactables()):
                  #add polymer to reactable list
                  self.add([poly])
     #Current State Data Methods
@@ -285,13 +285,13 @@ class Reactables:
                     left_count += 1
                 else:
                     right_count += 1
-        elif isinstance(reactable, Polymer):
-            l, r = reactable.get_chirality()
-            left_count += l
-            right_count += r
-        else:
-            print(f"{reactable}, which is a {type(reactable)}")
-            raise ValueError
+            elif isinstance(reactable, Polymer):
+                l, r = reactable.get_chirality()
+                left_count += l
+                right_count += r
+            else:
+                print(f"{reactable}, which is a {type(reactable)}")
+                raise ValueError
         return (left_count, right_count)
 
     def get_polymer_chirality(self):
@@ -474,21 +474,21 @@ class Reactables:
                 'HOMOCHIRAL_BREAK_FACTOR_RIGHT',
                 'HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR_LEFT',
                 'HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR_RIGHT']
-        values = [POOF_CHANCE,BOND_PROB,BASE_BOND_BREAK_PROBABILITY,
-            HOMOCHIRAL_BREAK_FACTOR,HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR,
-            LENGTH_FACTOR,HOMOCHIRAL_BREAK_FACTOR_LEFT,
-            HOMOCHIRAL_BREAK_FACTOR_RIGHT,
-            HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR_LEFT,
-            HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR_RIGHT]
+        values = [globalvariables.POOF_CHANCE,globalvariables.BOND_PROB,globalvariables.BASE_BOND_BREAK_PROBABILITY,
+            globalvariables.HOMOCHIRAL_BREAK_FACTOR,globalvariables.HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR,
+            globalvariables.LENGTH_FACTOR,globalvariables.HOMOCHIRAL_BREAK_FACTOR_LEFT,
+            globalvariables.HOMOCHIRAL_BREAK_FACTOR_RIGHT,
+            globalvariables.HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR_LEFT,
+            globalvariables.HOMOCHIRAL_NEIGHBOR_IMPROV_FACTOR_RIGHT]
 
-         ypos = np.arange(len(parameters))
+        ypos = np.arange(len(parameters))
 
-         ax.barh(ypos, values, align='center')
-         ax.set_yticks(ypos)
-         ax.set_yticklabels(parameters)
-         ax.invert_yaxis()  # labels read top-to-bottom
-         ax.set_xlabel('Value')
-         ax.set_title(f"{stamp}Parameter values")
+        ax.barh(ypos, values, align='center')
+        ax.set_yticks(ypos)
+        ax.set_yticklabels(parameters)
+        ax.invert_yaxis()  # labels read top-to-bottom
+        ax.set_xlabel('Value')
+        ax.set_title(f"{stamp}Parameter values")
 
 
 
@@ -546,33 +546,34 @@ class Reactables:
 
     def plot_leftrighthomochirality(self):
         plt.figure()
-        l=np.zeros((ITERATIONS+1))
-        r=np.zeros((ITERATIONS+1))
-        x= np.arange(ITERATIONS+1)
+        l=[]
+        r=[]
+        x=[]
         i=1
         for iteration in self.get_leftrighthistory():
-            l[i] = iteration[0]
-            r[i] = iteration[1]
+            l.append(iteration[0])
+            r.append(iteration[1])
+            x.append(i)
             i+= 1
         plt.plot(x,l,label="left homochiral")
         plt.plot(x,r,label="right homochiral")
         plt.ylabel("Number of bonds")
         plt.xlabel("Iterations")
-        plt.title("Left right homochiral bonds when LEFT="+str(HOMOCHIRAL_BREAK_FACTOR_LEFT) +  "and right=" + str(HOMOCHIRAL_BREAK_FACTOR_RIGHT))
+        plt.title("Left right homochiral bonds when LEFT="+str(globalvariables.HOMOCHIRAL_BREAK_FACTOR_LEFT) +  "and right=" + str(globalvariables.HOMOCHIRAL_BREAK_FACTOR_RIGHT))
         plt.legend()
         plt.show()
 
     def plot_homochiral_chain_lengths(self):
-         """ Plot a chart of the mean length of homochiral chains present at each iteration.
-         The plot generated will attempt to summarize the mean lengths of homochiral
-         chains within polymers across iterations. It will also attempt to visualize the 
-         varience with continuous lines plotting the standard deviation around that mean.
-  
+        """ Plot a chart of the mean length of homochiral chains present at each iteration.
+        The plot generated will attempt to summarize the mean lengths of homochiral
+        chains within polymers across iterations. It will also attempt to visualize the 
+        varience with continuous lines plotting the standard deviation around that mean.
+        
         The x axis of the resulting plot is iterations, and the y axis is length of 
         the homochiral chains. Both of these are discrete categories, but the plot will
         treat iterations as continuous to improve readability for large n.
         """
-  # Get the history and read it 
+       
         history = self.get_history()
         means = []
         stdevs= []
