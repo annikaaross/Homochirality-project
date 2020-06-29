@@ -7,6 +7,7 @@ Created on Tue Jun 23 11:42:54 2020
 import numpy as np
 import pandas as pd
 import more_itertools
+import matplotlib.pyplot as plt
 
 # Shorthands #
 L = True
@@ -25,7 +26,7 @@ sEE = "Signed ee"               # The signed enantiomeric excess of the polymer 
 pcHomo = "%Homochirality"       # The proportion of bonds in the polymer that are homochiral
 pcLhomo = "%LeftHomochirality"  # The proportion of bonds in the polymer that are left homochiral
 pcRhomo = "%RightHomochirality" # The proportion of bonds in the polymer that are right homochiral
-
+Iter = "Iteration"              # The iteration number at which the item is found
 
 
 
@@ -43,15 +44,16 @@ hist = [[(False,), (True,), (False,), (False,), (True,), (True,), (False, True),
         [(False,), (False, False, False), (False,), (True,), (False, True, True, False, True, True, True), (False, False, True, False, True), (True, False), (False,), (False,)], 
         [(False,), (True,), (False, False, False), (True, False, False, True, True, False, True, True, True), (False,), (False, False), (False, False, False, True, False, True)]]
 
-stats = []
+
 
 
 def parse_history(history):
     """ Create an array of plottable information from the history log. """
+    
+    individual_stats = pd.DataFrame()
 
-    for iteration in history:
-
-        iter_stats = pd.DataFrame()
+    for n in range(len(history)):
+        iteration = history[n]
         for item in iteration:
             if len(item) == 1: # It's a monomer
                 
@@ -73,8 +75,10 @@ def parse_history(history):
                     
                 # Now that the data is searchable...
                 # Log it
-                new_log = pd.Series(lookup.get(sequence))
-                iter_stats = iter_stats.append(new_log, ignore_index=True)
+                    
+                new_log = lookup.get(sequence)
+                new_log[Iter]=n
+                individual_stats = individual_stats.append(new_log, ignore_index=True)
 
             elif len(item) > 1: # It's a polymer
                 
@@ -111,12 +115,13 @@ def parse_history(history):
             
                 # Now that the data is searchable...
                 # Log it
-                new_log = pd.Series(lookup.get(sequence))
-                iter_stats = iter_stats.append(new_log, ignore_index=True)
+                new_log = lookup.get(sequence)
+                new_log[Iter]=n
+                individual_stats = individual_stats.append(new_log, ignore_index=True)
                 
             else:
                 raise ValueError("There's something with length 0 in your history.")
-        stats.append(iter_stats)
+    return(individual_stats)
 
     
 # Functions for getting the info we want to log
@@ -188,9 +193,80 @@ def standard_form(poly):
   return ''.join(['L' if m else 'R' for m in poly])
     
     
+def numpy_fillna(data):
+  """ Rectangularize a jagged array.
+
+  Source: https://stackoverflow.com/a/32043366
+  """
+  # Get lengths of each row of data
+  lens = np.array([len(i) for i in data])
+
+  # Mask of valid places in each row
+  mask = np.arange(lens.max()) < lens[:,None]
+
+  # Setup output array and put elements from data into masked positions
+  out = np.zeros(mask.shape, dtype=float)
+  out[mask] = np.concatenate(data)
+  return out
 
 ##############################################################################
 #%% MAIN %%#
 ##############################################################################
 
-parse_history(hist)
+stats = parse_history(hist)
+
+##############################################################################
+# Great. Now I want to replicate the plots with this code and see if it's easier.
+
+
+
+def plot_signed_ee_spread(stat,cmap='bone',stamp=""):
+    # Make a data structure
+    poly_ee_hist = []
+    for iteration in stat:
+        # Get the polymers
+        polys = iteration[iteration[Type]=="Polymer"]
+        # Get the EEs of the polymers
+        poly_ees = polys.loc[:,sEE]
+        # Put the EE list in our plottable structure
+        poly_ee_hist.append(poly_ees) 
+    #Now we can make the plot
+    fig,ax = plt.subplots()
+    ys = []
+    xs = []
+    for n in range(len(poly_ee_hist)):
+        y = poly_ee_hist[n]
+        x = [n] * len(y)
+        ys.extend(y)
+        xs.extend(x)
+    ax.hexbin(xs,ys,cmap=cmap)
+    ax.set_title(f"{stamp}polymer spread")
+    ax.set_xlabel("iteraions")
+    ax.set_ylabel("ee")
+  
+#plot_signed_ee_spread(stats)
+
+
+
+#######################################################
+
+def plot_ee_heatmap(stat,cmap='bone',stamp=""):
+    """ Ok so this function is supposed to plot the mean EE for each length
+    category by iteration. """
+    # Here's our plottable
+    ees_by_length = []
+    for iteration in stat:
+        pass
+        # Yeah ok I'm really not sure how to do this
+
+    #Need to make a new ee array with rectangular dimensions
+    ee = numpy_fillna(ees_by_length)
+    fig,ax = plt.subplots(dpi=150)
+    im = ax.imshow(ee,cmap=cmap)
+    ax.set_title(f"{stamp}ee of polymers by length through iterations")
+    ax.set_xlabel("polymer lengths")
+    ax.set_ylabel("iterations")
+    fig.tight_layout()
+    plt.show()
+
+
